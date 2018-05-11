@@ -43,8 +43,15 @@ require([
 		  // An instance of Map or WebScene
 		  map: map,
 		  container: "viewDiv",
-		  center:[-78.6481755, 35.790585],
-		  zoom: 15
+		  center:[-122.4194, 37.7749],
+		  camera: {
+		    position: [
+		       -122.38, // lon
+			 37.76, // lat
+		      300  // elevation in meters
+		    ],    
+		    heading: 95
+  		   }
 		});
 		/*
       var view = new MapView({
