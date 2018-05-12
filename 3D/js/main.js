@@ -32,8 +32,10 @@ require([
 		 
 	  var vtlLayer = new VectorTileLayer({
 		// URL to the style of vector tiles
-		url: "http://jsapi.maps.arcgis.com/sharing/rest/content/items/c11ce4f7801740b2905eb03ddc963ac8/resources/styles/root.json",
-		elevationInfo: { mode: "on-the-ground" }
+		///8a2cba3b0ebf4140b7c0dc5ee149549a/resources/styles/root.json  light
+		///c11ce4f7801740b2905eb03ddc963ac8/resources/styles/root.json  dark
+		///de26a3cf4cc9451298ea173c4b324736/resources/styles/root.json  street
+		url: "http://jsapi.maps.arcgis.com/sharing/rest/content/items/8a2cba3b0ebf4140b7c0dc5ee149549a/resources/styles/root.json",
 	  });
 		
 	  map.add(vtlLayer)
@@ -43,16 +45,31 @@ require([
 		  // An instance of Map or WebScene
 		  map: map,
 		  container: "viewDiv",
-		  center:[-122.4194, 37.7749],
+		  
 		  camera: {
 		    position: [
-		       -122.38, // lon
-			 37.76, // lat
-		      300  // elevation in meters
+		       -122.4194, 
+				37.7749, 
+				900  
 		    ],    
-		    heading: 95
-  		   }
+		    tilt: 80,
+			heading:320
+  		   },          
+		   environment: {
+            atmosphere: { // creates a realistic view of the atmosphere
+              quality: "high"
+            },
+            lighting: {
+              date: 1526061550887.1558,
+              directShadowsEnabled: true,
+              // don't update the view time when user pans.
+              // The clock widget drives the time
+              cameraTrackingEnabled: false
+            }
+          }
 		});
+		
+		
 		/*
       var view = new MapView({
           container: "viewDiv",
