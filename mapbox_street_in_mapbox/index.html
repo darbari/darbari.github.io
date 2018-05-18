@@ -8,22 +8,23 @@
 <script src='https://api.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.js'></script>
 <link href='https://api.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.css' rel='stylesheet' />
 
+<style>
+	body { margin:0; padding:0; }
+	#map { position:absolute; top:0; bottom:0; width:100%; }
+</style>
 
-<div id='map' style='width: 1250px; height: 580px;'></div>
-<script>
-	mapboxgl.accessToken = 'pk.eyJ1Ijoia2F0ZXJyYXV4IiwiYSI6ImNqaDZqcDVqbjFsdGoyeXFoNzA4cjc1dmkifQ.7fVizyDYNJWAy7l_OKxFfw';
-	var map = new mapboxgl.Map({
-		container: 'map',
-		style: 'mapbox://styles/katerraux/cjh838zau6fgj2rpmuihestfh'
-	});
-</script>
 
 
 </head>
+<body>
+<div id='map'></div>
+	<script>
+		mapboxgl.accessToken = 'pk.eyJ1Ijoia2F0ZXJyYXV4IiwiYSI6ImNqaDZqcDVqbjFsdGoyeXFoNzA4cjc1dmkifQ.7fVizyDYNJWAy7l_OKxFfw';
+		var map = new mapboxgl.Map({
+			container: 'map',
+			style: 'mapbox://styles/katerraux/cjh838zau6fgj2rpmuihestfh'
+		});
+	</script>
+</body>
 
 </html>
-
-
-
-
-
