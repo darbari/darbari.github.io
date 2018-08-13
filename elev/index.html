@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Custom ElevationLayer - Exaggerating elevation - 4.6</title>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.6/esri/css/main.css">
+
+  <style>
+    html,
+    body,
+    #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+
+  <script src="https://js.arcgis.com/4.6/"></script>
+
+  <script>
+    require([
+      "esri/Map",
+			"esri/geometry/Point",
+			"esri/symbols/SimpleMarkerSymbol",
+			"esri/symbols/SimpleFillSymbol",
+			"esri/layers/FeatureLayer",
+			"esri/geometry/SpatialReference",
+			"esri/renderers/SimpleRenderer",
+			"esri/geometry/Polygon",
+      "esri/views/SceneView",
+      "esri/layers/ElevationLayer",
+      "esri/layers/BaseElevationLayer",
+      "dojo/domReady!"
+    ], function(
+      Map,
+			Point,
+			SimpleMarkerSymbol,
+			SimpleFillSymbol,
+			FeatureLayer,
+			SpatialReference,
+			SimpleRenderer,
+			Polygon,
+      SceneView,
+      ElevationLayer,
+      BaseElevationLayer
+    ) {
+
+      //////////////////////////////////////////////
+      //
+      //   Create a subclass of BaseElevationLayer
+      //
+      /////////////////////////////////////////////
+			//-13775786.985666995 -13619243.951738996 4539747.983914988 4696291.0178429885
+			function createPolygonFL(paths,renderer,name){
+				var polygon = new Polygon({
+					hasZ: true,
+					rings: paths,
+					spatialReference: new SpatialReference(102100)
+				});
+				/*
+				var pointSym = new SimpleMarkerSymbol({
+						size: 9,
+						color: "#d15938",
+						outline: {width: 1,color: "black",style: "solid"}
+				});
+				pointRenderer=new SimpleRenderer({
+					symbol:pointSym
+				})*/
+				/*
+				var PolygonsArray={
+					geometry: polygon,
+					attributes: {"ObjectID":1,"Pr1":100}
+				};
+				var PolygonFL = new FeatureLayer({
+					source: [PolygonsArray], 
+					fields:["ObjectID","Pr1"],
+					objectIdField: "ObjectID",
+					renderer:renderer,
+					spatialReference: new SpatialReference(102100),
+					geometryType: "Polygon", // Must be set when creating a layer from Graphics
+					title:"building"
+				});
+			
+			
+				return PolygonFL
+				*/
+				return polygon.extent
+			}
+			
+			var rings = [
+				[  // first ring
+					[-13626972,4550230,95],//es
+					[-13627022,4550220,95],//ws
+					[-13627030,4550260,95],//wn
+					[-13626980,4550270,95],//en
+					[-13626972,4550230,95]	//es same as first vertex
+			 ]
+			];
+
+			var polygon = new Polygon({
+				hasZ: true,
+				rings: rings,
+				spatialReference: new SpatialReference(102100)
+			});
+			
+			var rings_b = [
+				[  // first ring
+					[-13626952,4550210,95],//es
+					[-13627042,4550200,95],//ws
+					[-13627050,4550280,95],//wn
+					[-13626960,4550290,95],//en
+					[-13626952,4550210,95]//es same as first vertex
+			 ]
+			];
+			/*
+					[-13626872,4550130,95],//es
+					[-13627122,4550120,95],//ws
+					[-13627130,4550360,95],//wn
+					[-13626880,4550370,95],//en
+					[-13626872,4550230,95]
+			*/
+			var polygon_b = new Polygon({
+				hasZ: true,
+				rings: rings_b,
+				spatialReference: new SpatialReference(102100)
+			});
+			
+			var fillSymbol = {
+        type: "simple-fill", // autocasts as new SimpleFillSymbol()
+        color: [227, 139, 79, 1],
+        outline: { // autocasts as new SimpleLineSymbol()
+          color: [0, 0, 0],
+          width: 2
+        }
+      };
+
+			
+			var building={
+				geometry: polygon,
+				attributes: {"ObjectID":1,"Pr1":100}
+			};
+			/*
+			var renderer = new SimpleRenderer({
+				symbol: fillSymbol,
+			});*/
+			
+			var renderer = {
+				type: "simple",  // autocasts as new SimpleRenderer()
+				color:[227, 139, 79, 1],
+				symbol: {
+					type: "polygon-3d",  // autocasts as new PolygonSymbol3D()
+					symbolLayers: [
+						{
+							type: "extrude",
+							material:{
+							color: [227, 139, 79, 1]
+							},
+							size:20
+						}],  // autocasts as new ExtrudeSymbol3DLayer()
+				}
+			};		
+			var lyr = new FeatureLayer({
+				source: [building], 
+				fields:["ObjectID","Pr1"],
+        objectIdField: "ObjectID",
+				renderer:renderer,
+				spatialReference: new SpatialReference(102100),
+				geometryType: "Polygon", // Must be set when creating a layer from Graphics
+				title:"building"
+			});
+		var lyr2 = new FeatureLayer({
+				source: [building], 
+				fields:["ObjectID","Pr1"],
+        objectIdField: "ObjectID",
+				renderer:renderer,
+				spatialReference: new SpatialReference(102100),
+				geometryType: "Polygon", // Must be set when creating a layer from Graphics
+				title:"building"
+			});
+		
+			
+					
+      var ExaggeratedElevationLayer = BaseElevationLayer.createSubclass({
+				
+        // Add an exaggeration property whose value will be used
+        // to multiply the elevations at each tile by a specified
+        // factor. In this case terrain will render 100x the actual elevation.
+				/*
+        properties: {
+          exaggeration: 100
+        },*/
+
+        // The load() method is called when the layer is added to the map
+        // prior to it being rendered in the view.
+
+        load: function() {
+          this._elevation = new ElevationLayer({
+            url: "//elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer"
+          });
+
+          // wait for the elevation layer to load before resolving load()
+          this.addResolvingPromise(this._elevation.load());
+        },
+
+        // Fetches the tile(s) visible in the view
+        fetchTile: function(level, row, col) {
+					
+					
+				
+					//console.log(level,row,col);
+          // calls fetchTile() on the elevationlayer for the tiles
+          // visible in the view
+					
+          return this._elevation.fetchTile(level, row, col)
+            .then(function(data) {
+							var bounds=this.getTileBounds(level, row, col)
+							var wTile=bounds[0]
+							var eTile=bounds[2]
+							var sTile=bounds[1]
+							var nTile=bounds[3]
+
+							
+							var paths = [
+								[  // first ring
+									[wTile,nTile,95],//es
+									[eTile,nTile,95],//ws
+									[eTile,sTile,95],//wn
+									[wTile,sTile,95],//en
+									[wTile,nTile,95]//es same as first vertex
+							 ]
+							];
+
+							
+							//console.log(polygon.extent);
+							//console.log(polygon.extent.xmin);
+							//for (var i=0;i<66049;)
+							
+							var tileExtent=createPolygonFL(paths,renderer,"tilePolygon")
+							var intersects=tileExtent.intersects(polygon_b)
+
+							
+							if(intersects){
+									var Hsteps=Math.abs(wTile-eTile)/256
+									var Vsteps=Math.abs(nTile-sTile)/256
+									var eSite=polygon_b.extent.xmax
+									var wSite=polygon_b.extent.xmin
+									var sSite=polygon_b.extent.ymin
+									var nSite=polygon_b.extent.ymax
+									console.log(eSite,wSite,sSite,nSite)
+									var xIndexMin=Math.floor(Math.abs(wSite-wTile)/Hsteps)
+									var xIndexMax=Math.floor(Math.abs(eSite-wTile)/Hsteps)+1
+									var yIndexMax=Math.floor(Math.abs(sSite-nTile)/Vsteps)+2 //south
+									var yIndexMin=Math.floor(Math.abs(nSite-nTile)/Vsteps)+1 //north
+									var nrowSearch=yIndexMax-yIndexMin+1
+									var ncolSearch=xIndexMax-xIndexMin+1
+									
+									searchLength=ncolSearch*nrowSearch
+									//console.log(yIndexMax,yIndexMin)
+									
+									var SR=new SpatialReference(102100)
+									points_array=[]
+									var count=1
+									var cut=0
+									var fill=0
+									for (var j=xIndexMin;j<=xIndexMax;j++){
+										for(var k=yIndexMin;k<=yIndexMax;k++){
+											var tileListIndex=((k-1)*257)+j
+											
+	
+											var lon=wTile+j*Hsteps
+											var lat=nTile-k*Vsteps
+											
+											var point = new Point({
+												x:lon,
+												y:lat,
+												//z:300,
+												spatialReference:SR
+											})
+											/*
+											var p={
+												geometry:point,
+												attributes:{"ObjectID":count,"Pr1":100}
+											}
+											count=count+1
+											points_array.push(p)*/
+
+											
+											var contain=polygon_b.extent.contains(point)
+											if(contain){
+											var vol=Math.abs(Hsteps*Vsteps*(data.values[tileListIndex]-95))
+											if (data.values[tileListIndex]>95){cut=cut+vol}else{fill=fill+vol}
+											data.values[tileListIndex]=94.94
+											//console.log(contain)
+											}
+																					
+
+										}
+									
+									}
+									//console.log(fill,cut)
+
+									/*
+									var pntlyr = new FeatureLayer({
+										source: points_array, 
+										fields:["ObjectID","Pr1"],
+										objectIdField: "ObjectID",
+										renderer:pointRenderer,
+										spatialReference: new SpatialReference(102100),
+										geometryType: "Point", // Must be set when creating a layer from Graphics
+										title:"points"
+									});*/
+									//map.add(pntlyr)
+									/*
+									for (var j=1;j<=searchLength;j++){
+										var yIndexLocal=Math.floor(j/ncolSearch)
+										var xIndexLocal=(j%ncolSearch)-1
+										var yIndexTile=yIndexLocal+yIndexMax
+										var xIndexTile=xIndexLocal+xIndexMin
+										var valuesIndex=(yIndexTile*257)+xIndexTile
+										var elevation=data.values[valuesIndex]
+										console.log(elevation)
+										data.values[valuesIndex]=94.5
+										
+									
+									
+									data.values.forEach(function(value, index, values) {
+									// each value represents an elevation sample for the
+									// given pixel position in the tile. Multiply this
+									// by the exaggeration value
+										values[index]=value
+										
+									});}*/
+									
+									
+								}
+							else{
+								values[index]=value
+								console.log("hey")
+							}
+              //var exaggeration = this.exaggeration;
+
+              // `data` is an object that contains the
+              // the width of the tile in pixels,
+              // the height of the tile in pixels,
+              // and the values of each pixel
+							/*
+              data.values.forEach(function(value, index, values) {
+                // each value represents an elevation sample for the
+                // given pixel position in the tile. Multiply this
+                // by the exaggeration value
+								if (index<10000){
+																values[index] =value;
+																}else{values[index] = value;}
+                
+              });*/
+
+              return data;
+            }.bind(this));
+        }
+      });
+
+      // Add the exaggerated elevation layer to the map's ground
+      // in place of the default world elevation service
+      var map = new Map({
+        basemap: "gray",
+        ground: {
+          layers: [
+            new ExaggeratedElevationLayer()
+          ]
+        }
+      });
+	  
+	  var map2 = new Map({
+        basemap: "gray",
+        ground: "world-elevation"
+      });
+		map.add(lyr);
+		map2.add(lyr2);
+			console.log(ExaggeratedElevationLayer.SpatialReference);
+      var view = new SceneView({
+        container: "viewDiv",
+        viewingMode: "global",
+        map: map,
+		camera: {
+			position: [
+			   -122.412, // lon
+				 37.795, // lat
+			  150// elevation in meters
+			],
+
+			heading: 210,
+			tilt: 85
+		},
+        constraints: {
+          snapToZoom: false
+        },
+				
+				environment: {
+            atmosphere: { // creates a realistic view of the atmosphere
+              quality: "high"
+            },
+            lighting: {
+              date: new Date('2017-12-17T10:24:00'),
+              directShadowsEnabled: true,
+              // don't update the view time when user pans.
+              // The clock widget drives the time
+              cameraTrackingEnabled: false
+            }
+          },
+      });
+	  
+      var view2 = new SceneView({
+        container: "viewDiv2",
+        viewingMode: "global",
+        map: map2,
+		camera: {
+			position: [
+			   -122.412, // lon
+				 37.795, // lat
+			  150// elevation in meters
+			],
+
+			heading: 210,
+			tilt: 85
+		},
+        constraints: {
+          snapToZoom: false
+        },
+				
+				environment: {
+            atmosphere: { // creates a realistic view of the atmosphere
+              quality: "high"
+            },
+            lighting: {
+              date: new Date('2017-12-17T10:24:00'),
+              directShadowsEnabled: true,
+              // don't update the view time when user pans.
+              // The clock widget drives the time
+              cameraTrackingEnabled: false
+            }
+          },
+      });
+
+    });
+  </script>
+</head>
+<body>
+  <div id="viewDiv" style="float: left; width: 50%; height: 100%;"></div>
+  <div id="viewDiv2" style="float: left; width: 50%; height: 100%;"></div>
+  
+  
+</body>
+</html>
